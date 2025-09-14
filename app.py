@@ -561,15 +561,15 @@ if program_data and program_models:
             st.plotly_chart(fig_ranking, use_container_width=True)
     
     with tab2:
-    st.markdown('<div class="animated-element">', unsafe_allow_html=True)
-    st.header("🔮 Prediksi Rating 7 Hari Ke Depan")
+       st.markdown('<div class="animated-element">', unsafe_allow_html=True)
+       st.header("🔮 Prediksi Rating 7 Hari Ke Depan")
 
-    all_predictions = []
+       all_predictions = []
 
-    for program, df in program_data.items():
-        if program in program_models:
+       for program, df in program_data.items():
+          if program in program_models:
             model = program_models[program]
-            try:
+             try:
                 # Feature engineering
                 df_feat = add_features(df).dropna()
                 X = df_feat[['lag_1','lag_2','lag_7','rolling_3','rolling_7',
@@ -1227,3 +1227,4 @@ st.markdown("""
 </div>
 
 """, unsafe_allow_html=True)
+
