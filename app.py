@@ -7,7 +7,8 @@ Dynamic and Interactive Version with Modern UI
 import streamlit as st
 import pandas as pd
 import numpy as np
-import pickle
+# import pickle <-- diubah
+from joblib import load
 from datetime import timedelta, datetime
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -397,7 +398,6 @@ else:
             if data_file and model_file:
                 try:
                     df = pd.read_excel(data_file)
-                    
                     # Column mapping
                     column_mapping = {
                         'Tanggal_Program': 'Date',
@@ -426,7 +426,8 @@ else:
                     
                     program_data[program] = df
                     
-                    model = pickle.load(model_file)
+                    # model = pickle.load(model_file) <--- diganti
+                    model = load(model_file)
                     program_models[program] = model
                     
                     st.success(f"✅ {program} loaded!")
@@ -813,12 +814,11 @@ if program_data and program_models:
             
             if comp_data:
                 comp_df = pd.DataFrame(comp_data)
-                
                 # Competitive positioning chart
                 fig_comp = px.scatter(comp_df, 
                                     x='Competitor_Rating', 
                                     y='Our_Rating',
-                                    size='Gap',
+                                    size=comp_df['Gap'].abs(), # <-- ini diganti
                                     color='Performance',
                                     hover_name='Program',
                                     title='Competitive Positioning Matrix',
