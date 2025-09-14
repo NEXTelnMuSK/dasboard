@@ -561,48 +561,64 @@ if program_data and program_models:
             st.plotly_chart(fig_ranking, use_container_width=True)
     
     with tab2:
-        st.markdown('<div class="animated-element">', unsafe_allow_html=True)
-        st.header("🔮 Prediksi Rating 7 Hari Ke Depan")
-        
-        # Generate predictions with enhanced visualization
-        all_predictions = []
-        
-        for program, df in program_data.items():
-            if program in program_models:
-                try:
-                    # Create enhanced prediction
-                    df_feat = add_features(df).dropna()
-                    
-                    # Generate 7-day predictions with more realistic patterns
-                    dates = pd.date_range(start=df['Date'].max() + timedelta(days=1), periods=7, freq='D')
-                    
-                    # Create more interesting prediction patterns
-                    base_rating = df['Rating_Program'].tail(3).mean()
-                    predictions = []
-                    
-                    for i, date in enumerate(dates):
-                        # Add weekly pattern and some randomness
-                        weekly_effect = 0.3 * np.sin(date.weekday() * 2 * np.pi / 7)
-                        trend_effect = 0.05 * i  # Slight upward trend
-                        random_effect = np.random.normal(0, 0.2)
-                        
-                        pred = base_rating + weekly_effect + trend_effect + random_effect
-                        pred = max(0.5, min(8.0, pred))
-                        predictions.append(pred)
-                    
-                    pred_df = pd.DataFrame({
-                        'Date': dates,
-                        'Rating': predictions,
-                        'Rating_Program': predictions,
-                        'Program': program,
-                        'Day': range(1, 8),
-                        'DayName': [d.strftime('%A') for d in dates]
-                    })
-                    
-                    all_predictions.append(pred_df)
-                    
-                except Exception as e:
-                    st.error(f"❌ Error prediksi untuk {program}: {str(e)}")
+    st.markdown('<div class="animated-element">', unsafe_allow_html=True)
+    st.header("🔮 Prediksi Rating 7 Hari Ke Depan")
+
+    all_predictions = []
+
+    for program, df in program_data.items():
+        if program in program_models:
+            model = program_models[program]
+            try:
+                # Feature engineering
+                df_feat = add_features(df).dropna()
+                X = df_feat[['lag_1','lag_2','lag_7','rolling_3','rolling_7',
+                             'std_3','std_7','Year','Month','Day']]
+
+                # Generate prediction for next 7 days
+                dates = pd.date_range(start=df['Date'].max() + timedelta(days=1), periods=7, freq='D')
+
+                # Ambil 7 baris terakhir untuk prediksi
+                if len(X) >= 7:
+                    predictions = model.predict(X.tail(7))
+                else:
+                    predictions = model.predict(X)
+
+                pred_df = pd.DataFrame({
+                    'Date': dates,
+                    'Rating': predictions,
+                    'Rating_Program': predictions,
+                    'Program': program,
+                    'Day': range(1, len(predictions)+1),
+                    'DayName': [d.strftime('%A') for d in dates[:len(predictions)]]
+                })
+
+                all_predictions.append(pred_df)
+
+            except Exception as e:
+                st.warning(f"⚠️ Model {program} tidak bisa dipakai langsung ({e}), pakai prediksi manual.")
+
+                # fallback manual prediction
+                dates = pd.date_range(start=df['Date'].max() + timedelta(days=1), periods=7, freq='D')
+                base_rating = df['Rating_Program'].tail(3).mean()
+                predictions = []
+                for i, date in enumerate(dates):
+                    weekly_effect = 0.3 * np.sin(date.weekday() * 2 * np.pi / 7)
+                    trend_effect = 0.05 * i
+                    random_effect = np.random.normal(0, 0.2)
+                    pred = base_rating + weekly_effect + trend_effect + random_effect
+                    pred = max(0.5, min(8.0, pred))
+                    predictions.append(pred)
+
+                pred_df = pd.DataFrame({
+                    'Date': dates,
+                    'Rating': predictions,
+                    'Rating_Program': predictions,
+                    'Program': program,
+                    'Day': range(1, 8),
+                    'DayName': [d.strftime('%A') for d in dates]
+                })
+                all_predictions.append(pred_df)
         
         if all_predictions:
             combined_predictions = pd.concat(all_predictions, ignore_index=True)
@@ -1209,4 +1225,5 @@ st.markdown("""
         <span style="margin: 0 1rem;">🎯 Strategic Intelligence</span>
     </div>
 </div>
+
 """, unsafe_allow_html=True)
