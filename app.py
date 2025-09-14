@@ -560,16 +560,16 @@ if program_data and program_models:
             )
             st.plotly_chart(fig_ranking, use_container_width=True)
     
-    with tab2:
-       st.markdown('<div class="animated-element">', unsafe_allow_html=True)
-       st.header("🔮 Prediksi Rating 7 Hari Ke Depan")
+   with tab2:
+    st.markdown('<div class="animated-element">', unsafe_allow_html=True)
+    st.header("🔮 Prediksi Rating 7 Hari Ke Depan")
 
-       all_predictions = []
+    all_predictions = []
 
-       for program, df in program_data.items():
-          if program in program_models:
-              model = program_models[program]
-             try:
+    for program, df in program_data.items():
+        if program in program_models:
+            model = program_models[program]
+            try:
                 # Feature engineering
                 df_feat = add_features(df).dropna()
                 X = df_feat[['lag_1','lag_2','lag_7','rolling_3','rolling_7',
@@ -619,65 +619,66 @@ if program_data and program_models:
                     'DayName': [d.strftime('%A') for d in dates]
                 })
                 all_predictions.append(pred_df)
-        
-        if all_predictions:
-            combined_predictions = pd.concat(all_predictions, ignore_index=True)
-            
-            # Enhanced prediction visualization
-            fig = create_enhanced_line_chart(combined_predictions, "🔮 Prediksi Rating 7 Hari Ke Depan", 600)
-            
-            # Add confidence intervals
-            for program in combined_predictions['Program'].unique():
-                program_pred = combined_predictions[combined_predictions['Program'] == program]
-                
-                # Create confidence band
-                upper_bound = program_pred['Rating'] * 1.1
-                lower_bound = program_pred['Rating'] * 0.9
-                
-                fig.add_trace(go.Scatter(
-                    x=program_pred['Date'].tolist() + program_pred['Date'].tolist()[::-1],
-                    y=upper_bound.tolist() + lower_bound.tolist()[::-1],
-                    fill='toself',
-                    fillcolor='rgba(255,255,255,0.1)',
-                    line=dict(color='rgba(255,255,255,0)'),
-                    name=f'{program} Confidence',
-                    showlegend=False,
-                    hoverinfo='skip'
-                ))
-            
-            st.plotly_chart(fig, use_container_width=True)
-            
-            # Interactive prediction table
-            st.subheader("📋 Detail Prediksi Interaktif")
-            
-            selected_program = st.selectbox(
-                "🎯 Pilih Program untuk Analisis Detail:",
-                combined_predictions['Program'].unique()
-            )
-            
-            program_pred = combined_predictions[
-                combined_predictions['Program'] == selected_program
-            ][['Date', 'Rating', 'DayName']].round(3)
-            
-            # Enhanced metrics
-            col1, col2, col3, col4 = st.columns(4)
-            
-            with col1:
-                avg_pred = program_pred['Rating'].mean()
-                st.metric("📊 Rata-rata Prediksi", f"{avg_pred:.3f}")
-            
-            with col2:
-                max_pred = program_pred['Rating'].max()
-                max_day = program_pred.loc[program_pred['Rating'].idxmax(), 'DayName']
-                st.metric("📈 Rating Tertinggi", f"{max_pred:.3f}", delta=max_day)
-            
-            with col3:
-                volatility = program_pred['Rating'].std()
-                st.metric("📉 Volatilitas", f"{volatility:.3f}")
-            
-            with col4:
-                trend = program_pred['Rating'].iloc[-1] - program_pred['Rating'].iloc[0]
-                st.metric("📈 Trend 7 Hari", f"{trend:+.3f}")
+
+    if all_predictions:
+        combined_predictions = pd.concat(all_predictions, ignore_index=True)
+
+        # Enhanced prediction visualization
+        fig = create_enhanced_line_chart(combined_predictions, "🔮 Prediksi Rating 7 Hari Ke Depan", 600)
+
+        # Add confidence intervals
+        for program in combined_predictions['Program'].unique():
+            program_pred = combined_predictions[combined_predictions['Program'] == program]
+
+            # Create confidence band
+            upper_bound = program_pred['Rating'] * 1.1
+            lower_bound = program_pred['Rating'] * 0.9
+
+            fig.add_trace(go.Scatter(
+                x=program_pred['Date'].tolist() + program_pred['Date'].tolist()[::-1],
+                y=upper_bound.tolist() + lower_bound.tolist()[::-1],
+                fill='toself',
+                fillcolor='rgba(255,255,255,0.1)',
+                line=dict(color='rgba(255,255,255,0)'),
+                name=f'{program} Confidence',
+                showlegend=False,
+                hoverinfo='skip'
+            ))
+
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Interactive prediction table
+        st.subheader("📋 Detail Prediksi Interaktif")
+
+        selected_program = st.selectbox(
+            "🎯 Pilih Program untuk Analisis Detail:",
+            combined_predictions['Program'].unique()
+        )
+
+        program_pred = combined_predictions[
+            combined_predictions['Program'] == selected_program
+        ][['Date', 'Rating', 'DayName']].round(3)
+
+        # Enhanced metrics
+        col1, col2, col3, col4 = st.columns(4)
+
+        with col1:
+            avg_pred = program_pred['Rating'].mean()
+            st.metric("📊 Rata-rata Prediksi", f"{avg_pred:.3f}")
+
+        with col2:
+            max_pred = program_pred['Rating'].max()
+            max_day = program_pred.loc[program_pred['Rating'].idxmax(), 'DayName']
+            st.metric("📈 Rating Tertinggi", f"{max_pred:.3f}", delta=max_day)
+
+        with col3:
+            volatility = program_pred['Rating'].std()
+            st.metric("📉 Volatilitas", f"{volatility:.3f}")
+
+        with col4:
+            trend = program_pred['Rating'].iloc[-1] - program_pred['Rating'].iloc[0]
+            st.metric("📈 Trend 7 Hari", f"{trend:+.3f}")
+
             
             # Display prediction table with styling
             st.dataframe(
@@ -1227,5 +1228,6 @@ st.markdown("""
 </div>
 
 """, unsafe_allow_html=True)
+
 
 
