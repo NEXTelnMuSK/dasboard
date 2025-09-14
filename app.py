@@ -568,7 +568,7 @@ if program_data and program_models:
 
        for program, df in program_data.items():
           if program in program_models:
-            model = program_models[program]
+              model = program_models[program]
              try:
                 # Feature engineering
                 df_feat = add_features(df).dropna()
@@ -1227,4 +1227,5 @@ st.markdown("""
 </div>
 
 """, unsafe_allow_html=True)
+
 
